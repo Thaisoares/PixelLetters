@@ -2,39 +2,69 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LetterGrid } from "./LetterGrid";
 import { GameState } from "@/types/game";
-import { getRandomWord, isValidWord } from "@/lib/wordList";
 import { compareLetters } from "@/lib/gameLogic";
+import { VictoryModal } from "./VictoryModal";
+import { GameGrid } from "./GameGrid";
+import { Header } from "./Header";
+import { Keyboard } from "./KeyBoard";
+import { checkWordValidity, getRandomWord } from "@/lib/wordListClient";
 
-export const Game = () => {
+interface GameProps {
+  lengthWord: number;
+}
+
+export const Game = ({ lengthWord }: GameProps) => {
+  const defaultWord = Array(lengthWord).fill(".").join("");
   const [gameState, setGameState] = useState<GameState>({
     targetWord: "",
     attempts: [],
-    currentAttempt: "",
+    currentAttempt: defaultWord,
     maxAttempts: 5,
     gameOver: false,
     won: false,
+    evaluatedWords: [],
   });
+  const [error, setError] = useState<string>("");
+  const [showVictory, setShowVictory] = useState(false);
+  const [currentPosition, setCurrentPosition] = useState<number>(1);
 
-  useEffect(() => {
-    setGameState((prev) => ({ ...prev, targetWord: getRandomWord() }));
-  }, []);
-
-  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toUpperCase();
-    if (value.length <= 4) {
-      setGameState((prev) => ({ ...prev, currentAttempt: value }));
+  const fetchNewWord = async () => {
+    try {
+      const response = await fetch("/api/words");
+      const data = await response.json();
+      setGameState((prev) => ({ ...prev, targetWord: data.word }));
+    } catch (error) {
+      console.error("Error fetching word:", error);
+      setError("Erro ao carregar o jogo");
     }
   };
 
-  const handleSubmit = () => {
-    if (
-      gameState.currentAttempt.length !== 4 ||
-      !isValidWord(gameState.currentAttempt)
-    ) {
+  useEffect(() => {
+    const initGame = async () => {
+      const word = await getRandomWord();
+      setGameState((prev) => ({ ...prev, targetWord: word }));
+    };
+    initGame();
+  }, []);
+
+  const handleSubmit = async () => {
+    if (gameState.currentAttempt.length !== 5) {
+      setError("A palavra deve ter 5 letras");
       return;
     }
+
+    const isValid = await checkWordValidity(gameState.currentAttempt);
+    if (!isValid) {
+      setError("Palavra inválida");
+      return;
+    }
+
+    const evaluatedWord = compareLetters(
+      gameState.currentAttempt,
+      gameState.targetWord,
+      gameState.attempts.length
+    );
 
     const newAttempts = [...gameState.attempts, gameState.currentAttempt];
     const won = gameState.currentAttempt === gameState.targetWord;
@@ -43,69 +73,125 @@ export const Game = () => {
     setGameState((prev) => ({
       ...prev,
       attempts: newAttempts,
-      currentAttempt: "",
+      currentAttempt: defaultWord,
       gameOver,
       won,
+      evaluatedWords: [...(prev.evaluatedWords || []), evaluatedWord],
     }));
+    setCurrentPosition(1);
+    console.log(gameState);
+
+    if (won) {
+      setShowVictory(true);
+    }
+
+    setError("");
   };
 
+  // Add keyboard handling
+  useEffect(() => {
+    const handleKeyboardPress = (event: KeyboardEvent) => {
+      if (gameState.gameOver) return;
+
+      if (event.key === "Enter") {
+        handleSubmit();
+      } else if (event.key === "Backspace") {
+        handleBackspacePress();
+      } else if (/^[A-Za-z]$/.test(event.key)) {
+        const letter = event.key.toUpperCase();
+        handleKeyPress(letter);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyboardPress);
+    return () => window.removeEventListener("keydown", handleKeyboardPress);
+  }, [gameState]);
+
+  const handleKeyPress = (key: string) => {
+    setError("");
+    var index = currentPosition - 1;
+
+    setGameState((prev) => {
+      var chars = prev.currentAttempt.split("");
+      chars[index] = key;
+      return {
+        ...prev,
+        currentAttempt: chars.join(""),
+      };
+    });
+
+    setCurrentPosition((prev) => {
+      if (prev < 5) {
+        return prev + 1;
+      }
+      return 5;
+    });
+  };
+
+  const handleBackspacePress = () => {
+    setError("");
+    var index = currentPosition - 1;
+    var chars = gameState.currentAttempt.split("");
+    if (chars[index] == ".") {
+      index -= 1;
+    }
+    chars[index] = ".";
+
+    setGameState((prev) => {
+      return {
+        ...prev,
+        currentAttempt: chars.join(""),
+      };
+    });
+
+    setCurrentPosition(index + 1);
+  };
+
+  const handlePlayAgain = async () => {
+    await fetchNewWord();
+    setGameState((prev) => ({
+      ...prev,
+      attempts: [],
+      currentAttempt: defaultWord,
+      gameOver: false,
+      won: false,
+      evaluatedWords: [],
+    }));
+    setShowVictory(false);
+  };
+  console.log({ gameState, position: currentPosition });
   return (
-    <div className="flex flex-col items-center gap-8 p-8">
-      <h1 className="text-4xl font-bold">Jogo das Letras</h1>
+    <div className="min-h-screen bg-white">
+      <Header />
 
-      <div className="flex flex-col gap-4">
-        {gameState.attempts.map((attempt, index) => (
-          <div key={index} className="flex gap-2">
-            {compareLetters(attempt, gameState.targetWord).map(
-              (pixels, letterIndex) => (
-                <LetterGrid key={letterIndex} pixels={pixels} />
-              )
-            )}
-          </div>
-        ))}
-      </div>
-
-      {!gameState.gameOver && (
-        <div className="flex gap-4">
-          <input
-            type="text"
-            value={gameState.currentAttempt}
-            onChange={handleInput}
-            className="px-4 py-2 border rounded"
-            maxLength={4}
-            placeholder="Digite uma palavra"
+      <main className="container mx-auto px-4 py-10">
+        <div className="max-w-lg mx-auto">
+          <GameGrid
+            {...gameState}
+            currentPosition={currentPosition}
+            setCurrentPosition={setCurrentPosition}
           />
-          <button
-            onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Tentar
-          </button>
-        </div>
-      )}
 
-      {gameState.gameOver && (
-        <div className="text-center">
-          <p className="text-xl font-bold mb-2">
-            {gameState.won ? "Parabéns! Você venceu!" : "Fim de jogo!"}
-          </p>
-          <p>A palavra era: {gameState.targetWord}</p>
-          <button
-            onClick={() => {
-              setGameState({
-                targetWord: getRandomWord(),
-                attempts: [],
-                currentAttempt: "",
-                maxAttempts: 5,
-                gameOver: false,
-                won: false,
-              });
-            }}
-            className="mt-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-          >
-            Jogar Novamente
-          </button>
+          {error && (
+            <div className="mt-4 p-4 bg-error-background text-error-text rounded text-center">
+              {error}
+            </div>
+          )}
+
+          <Keyboard
+            onKeyPress={handleKeyPress}
+            onEnter={handleSubmit}
+            onBackspace={handleBackspacePress}
+          />
         </div>
+      </main>
+
+      {showVictory && (
+        <VictoryModal
+          attempts={gameState.attempts.length}
+          targetWord={gameState.targetWord}
+          onPlayAgain={handlePlayAgain}
+        />
       )}
     </div>
   );

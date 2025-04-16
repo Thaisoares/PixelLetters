@@ -1,34 +1,37 @@
-// src/lib/gameLogic.ts
 import { Pixel } from "@/types/game";
-import { letterToPixels, LETTER_MAPPINGS } from "./letterMapping";
+import { letterToPixels } from "./letterMapping";
 
-export const compareLetters = (attempt: string, target: string): Pixel[][] => {
+export const compareLetters = (
+  attempt: string,
+  target: string,
+  currentAttempt: number
+): Pixel[][] => {
   return attempt.split("").map((letter, index) => {
     const targetLetter = target[index];
-    const pixels = letterToPixels(letter);
+    const attemptPixels = letterToPixels(letter);
+    const targetPixels = letterToPixels(targetLetter);
 
-    if (letter === targetLetter) {
-      return pixels.map((p) => ({ ...p, color: "blue" }));
-    }
+    return attemptPixels.map((pixel) => {
+      // If the letter is in the correct position, all its pixels should be blue
+      if (letter === targetLetter) {
+        return { ...pixel, color: "blue" };
+      }
 
-    const targetPixels = LETTER_MAPPINGS[targetLetter] || [];
-    const attemptPixels = LETTER_MAPPINGS[letter] || [];
+      // Only evaluate pixels up to the current row based on attempt number
+      if (pixel.row > currentAttempt) {
+        return { ...pixel, color: "gray" };
+      }
 
-    return pixels.map((pixel) => {
-      const pos = [pixel.row, pixel.col];
-      const isInTarget = targetPixels.some(
-        ([r, c]) => r === pos[0] && c === pos[1]
+      // Check if this pixel position exists in the target letter
+      const hasPixelInTarget = targetPixels.some(
+        (tp) => tp.row === pixel.row && tp.col === pixel.col
       );
-      const isInAttempt = attemptPixels.some(
-        ([r, c]) => r === pos[0] && c === pos[1]
-      );
 
-      if (isInTarget && isInAttempt) {
+      if (hasPixelInTarget) {
         return { ...pixel, color: "green" };
-      } else if (!isInTarget && isInAttempt) {
+      } else {
         return { ...pixel, color: "red" };
       }
-      return { ...pixel, color: "gray" };
     });
   });
 };

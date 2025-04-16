@@ -7,7 +7,6 @@ export interface Pixel {
 
 export interface Letter {
   pixels: Pixel[];
-  value: string;
 }
 
 export interface GameState {
@@ -17,6 +16,5 @@ export interface GameState {
   maxAttempts: number;
   gameOver: boolean;
   won: boolean;
+  evaluatedWords?: Pixel[][][];
 }
-
-export type GameStatus = "playing" | "won" | "lost";

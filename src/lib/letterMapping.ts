@@ -1,44 +1,22 @@
-// src/lib/letterMapping.ts
 import { Pixel } from "@/types/game";
-
-export const LETTER_MAPPINGS: { [key: string]: number[][] } = {
-  A: [
-    [0, 0],
-    [0, 4],
-    [1, 1],
-    [1, 3],
-    [2, 2],
-    [3, 1],
-    [3, 3],
-    [4, 0],
-    [4, 4],
-  ],
-  B: [
-    [0, 0],
-    [0, 1],
-    [0, 2],
-    [0, 3],
-    [1, 0],
-    [1, 4],
-    [2, 0],
-    [2, 1],
-    [2, 2],
-    [2, 3],
-    [3, 0],
-    [3, 4],
-    [4, 0],
-    [4, 1],
-    [4, 2],
-    [4, 3],
-  ],
-  // Add more letters...
-};
+import { LETTER_MAPPINGS } from "./letters";
 
 export const letterToPixels = (letter: string): Pixel[] => {
-  const positions = LETTER_MAPPINGS[letter] || [];
-  return positions.map(([row, col]) => ({
-    row,
-    col,
-    color: "gray",
-  }));
+  const letterPattern =
+    LETTER_MAPPINGS[letter] || Array(7).fill(Array(5).fill(0));
+  const pixels: Pixel[] = [];
+
+  for (let row = 0; row < 7; row++) {
+    for (let col = 0; col < 5; col++) {
+      if (letterPattern[row][col] === 1) {
+        pixels.push({
+          row,
+          col,
+          color: "gray",
+        });
+      }
+    }
+  }
+
+  return pixels;
 };
