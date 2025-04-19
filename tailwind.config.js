@@ -9,8 +9,8 @@ export const theme = {
   extend: {
     colors: {
       "correct-letter": "#30bbc2",
-      "correct-pixel": "#10B981",
-      "wrong-pixel": "#EF4444",
+      "correct-pixel": "#2ec242", //"#32b544", //10B981
+      "wrong-pixel": "#c22d37 ", //"#b53535",
       "inactive-pixel": "#6B7280",
       error: {
         background: "#FEE2E2",

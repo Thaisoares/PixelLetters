@@ -1,7 +1,6 @@
-// src/components/Game.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { GameState } from "@/types/game";
 import { compareLetters } from "@/lib/gameLogic";
 import { VictoryModal } from "./VictoryModal";
@@ -9,6 +8,7 @@ import { GameGrid } from "./GameGrid";
 import { Header } from "./Header";
 import { Keyboard } from "./KeyBoard";
 import { checkWordValidity, getRandomWord } from "@/lib/wordListClient";
+import next from "next";
 
 interface GameProps {
   lengthWord: number;
@@ -20,7 +20,7 @@ export const Game = ({ lengthWord }: GameProps) => {
     targetWord: "",
     attempts: [],
     currentAttempt: defaultWord,
-    maxAttempts: 5,
+    maxAttempts: lengthWord,
     gameOver: false,
     won: false,
     evaluatedWords: [],
@@ -49,8 +49,8 @@ export const Game = ({ lengthWord }: GameProps) => {
   }, []);
 
   const handleSubmit = async () => {
-    if (gameState.currentAttempt.length !== 5) {
-      setError("A palavra deve ter 5 letras");
+    if (gameState.currentAttempt.length !== lengthWord) {
+      setError(`A palavra deve ter ${lengthWord} letras`);
       return;
     }
 
@@ -88,56 +88,41 @@ export const Game = ({ lengthWord }: GameProps) => {
     setError("");
   };
 
-  // Add keyboard handling
-  useEffect(() => {
-    const handleKeyboardPress = (event: KeyboardEvent) => {
-      if (gameState.gameOver) return;
+  const handleKeyPress = useCallback(
+    (key: string) => {
+      setError("");
+      const index = currentPosition - 1;
+      console.log({ where: "keys", currentPosition, index, key });
 
-      if (event.key === "Enter") {
-        handleSubmit();
-      } else if (event.key === "Backspace") {
-        handleBackspacePress();
-      } else if (/^[A-Za-z]$/.test(event.key)) {
-        const letter = event.key.toUpperCase();
-        handleKeyPress(letter);
-      }
-    };
+      setGameState((prev) => {
+        const chars = prev.currentAttempt.split("");
+        chars[index] = key;
+        return {
+          ...prev,
+          currentAttempt: chars.join(""),
+        };
+      });
 
-    window.addEventListener("keydown", handleKeyboardPress);
-    return () => window.removeEventListener("keydown", handleKeyboardPress);
-  }, [gameState]);
+      const nextPosition = Math.min(lengthWord, currentPosition + 1);
+      setCurrentPosition(nextPosition);
+    },
+    [currentPosition]
+  );
 
-  const handleKeyPress = (key: string) => {
+  const handleBackspacePress = useCallback(() => {
     setError("");
-    var index = currentPosition - 1;
+    let index = currentPosition - 1;
 
     setGameState((prev) => {
-      var chars = prev.currentAttempt.split("");
-      chars[index] = key;
-      return {
-        ...prev,
-        currentAttempt: chars.join(""),
-      };
-    });
+      const chars = prev.currentAttempt.split("");
+      console.log({ where: "backspace", index, chars, currentPosition });
 
-    setCurrentPosition((prev) => {
-      if (prev < 5) {
-        return prev + 1;
+      if (chars[index] === ".") {
+        index = index === 0 ? 0 : index - 1;
       }
-      return 5;
-    });
-  };
 
-  const handleBackspacePress = () => {
-    setError("");
-    var index = currentPosition - 1;
-    var chars = gameState.currentAttempt.split("");
-    if (chars[index] == ".") {
-      index -= 1;
-    }
-    chars[index] = ".";
+      chars[index] = ".";
 
-    setGameState((prev) => {
       return {
         ...prev,
         currentAttempt: chars.join(""),
@@ -145,7 +130,7 @@ export const Game = ({ lengthWord }: GameProps) => {
     });
 
     setCurrentPosition(index + 1);
-  };
+  }, [currentPosition]);
 
   const handlePlayAgain = async () => {
     await fetchNewWord();
@@ -159,7 +144,41 @@ export const Game = ({ lengthWord }: GameProps) => {
     }));
     setShowVictory(false);
   };
-  console.log({ gameState, position: currentPosition });
+
+  // Add keyboard handling
+  useEffect(() => {
+    const handleKeyboardPress = (event: KeyboardEvent) => {
+      if (gameState.gameOver) return;
+
+      if (event.key === "Enter") {
+        handleSubmit();
+      } else if (event.key === "Backspace") {
+        handleBackspacePress();
+      } else if (event.key === "ArrowLeft") {
+        if (currentPosition > 1) {
+          setCurrentPosition((prev) => prev - 1);
+        }
+      } else if (event.key === "ArrowRight") {
+        if (currentPosition < lengthWord) {
+          setCurrentPosition((prev) => prev + 1);
+        }
+      } else if (/^[A-Za-z]$/.test(event.key)) {
+        const letter = event.key.toUpperCase();
+        handleKeyPress(letter);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyboardPress);
+    return () => window.removeEventListener("keydown", handleKeyboardPress);
+  }, [
+    gameState.gameOver,
+    currentPosition,
+    handleKeyPress,
+    handleBackspacePress,
+    lengthWord,
+  ]);
+
+  console.log({ where: "all", gameState, currentPosition });
   return (
     <div className="min-h-screen bg-white">
       <Header />

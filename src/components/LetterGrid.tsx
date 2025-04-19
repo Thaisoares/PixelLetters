@@ -1,3 +1,5 @@
+"use client";
+
 import { Pixel } from "@/types/game";
 import { Dispatch, SetStateAction } from "react";
 
@@ -33,17 +35,17 @@ export const LetterGrid = ({
         w-letter-sm h-letter-sm
         md:w-letter-md md:h-letter-md 
         p-1.5 
-        ${
-          isEmpty
-            ? "border-button-hover border-[1px]"
-            : "bg-darkBackground p-1 md:p-2 border-[1.5px] border-darkBackground"
-        }
-        ${
-          isCurrentPosition
-            ? "border-lightBlue border=[1.5px] bg-lightBlue"
-            : ""
-        }
+          ${
+            isEmpty
+              ? isCurrentPosition
+                ? "border-lightBlue border-2 bg-darkBackground/5" // Highlight current position
+                : "border-button-hover border-[1px]"
+              : isCurrentPosition
+              ? "bg-darkBackground  md:p-2 border-2 border-lightBlue"
+              : "bg-darkBackground md:p-2 border-2 border-darkBackground"
+          }
         flex items-center justify-center rounded-[0.2rem]
+        ${setPosition ? "cursor-pointer" : ""}
       `}
     >
       {!isEmpty && (

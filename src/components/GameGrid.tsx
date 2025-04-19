@@ -1,3 +1,5 @@
+"use client";
+
 import { letterToPixels } from "@/lib/letterMapping";
 import { LetterGrid } from "./LetterGrid";
 import { Pixel } from "@/types/game";
@@ -24,7 +26,6 @@ export const GameGrid = ({
   currentPosition,
   setCurrentPosition,
 }: GameGridProps) => {
-  console.log({ currentAttempt, currentPosition });
   return (
     <div className="grid gap-4 mb-8">
       {/* Previous attempts */}
