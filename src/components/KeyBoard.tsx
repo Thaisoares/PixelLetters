@@ -1,17 +1,11 @@
-import { KeyboardLetter } from "./KeyboardLetter";
+"use client";
+
+import { useGame } from "@/context/GameContext";
 import { BackspaceIcon } from "@heroicons/react/24/solid";
+import { KeyboardLetter } from "./KeyboardLetter";
 
-interface KeyboardProps {
-  onKeyPress: (key: string) => void;
-  onEnter: () => void;
-  onBackspace: () => void;
-}
-
-export const Keyboard = ({
-  onKeyPress,
-  onEnter,
-  onBackspace,
-}: KeyboardProps) => {
+export const Keyboard = () => {
+  const { handleKeyPress, handleSubmit, handleBackspacePress } = useGame();
   return (
     <div className="mt-8 flex flex-col gap-2">
       <div className="flex justify-center gap-1">
@@ -19,7 +13,7 @@ export const Keyboard = ({
           <KeyboardLetter
             key={key}
             letter={key}
-            onClick={() => onKeyPress(key)}
+            onClick={() => handleKeyPress(key)}
           />
         ))}
       </div>
@@ -28,14 +22,14 @@ export const Keyboard = ({
           <KeyboardLetter
             key={key}
             letter={key}
-            onClick={() => onKeyPress(key)}
+            onClick={() => handleKeyPress(key)}
           />
         ))}
       </div>
       <div className="flex justify-center gap-1">
         <button
           className="w-[80px] h-[50px] bg-keyboard-background rounded-md font-bold text-sm text-keyboard-text hover:bg-keyboard-hover transition-colors"
-          onClick={onEnter}
+          onClick={handleSubmit}
         >
           ENTER
         </button>
@@ -43,12 +37,12 @@ export const Keyboard = ({
           <KeyboardLetter
             key={key}
             letter={key}
-            onClick={() => onKeyPress(key)}
+            onClick={() => handleKeyPress(key)}
           />
         ))}
         <button
           className="w-[50px] h-[50px] bg-keyboard-background rounded-md font-bold text-xl text-keyboard-text hover:bg-keyboard-hover transition-colors"
-          onClick={onBackspace}
+          onClick={handleBackspacePress}
         >
           <BackspaceIcon className="p-3 text-keyboard-text" />
         </button>

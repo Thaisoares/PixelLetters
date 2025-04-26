@@ -1,30 +1,44 @@
-interface VictoryModalProps {
-  attempts: number;
-  targetWord: string;
-  onPlayAgain: () => void;
-}
+"use client";
 
-export const VictoryModal = ({
-  attempts,
-  targetWord,
-  onPlayAgain,
-}: VictoryModalProps) => {
+import { useGame } from "@/context/GameContext";
+import { XMarkIcon } from "@heroicons/react/24/outline"; // Make sure to install @heroicons/react
+
+export const VictoryModal = () => {
+  const {
+    gameState: { attempts, targetWord },
+    handlePlayAgain,
+    setShowVictory,
+  } = useGame();
+
+  const handleClose = () => {
+    setShowVictory(false);
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4">
-        <h2 className="text-3xl font-bold text-center mb-4">Parabéns!</h2>
-        <p className="text-center text-lg mb-4">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 md:p-8 text-center relative">
+        {/* Close button */}
+        <button
+          onClick={handleClose}
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 transition-colors"
+          aria-label="Close"
+        >
+          <XMarkIcon className="w-6 h-6 text-button-background" />
+        </button>
+
+        <h2 className="text-2xl font-bold mb-4">Parabéns!</h2>
+
+        <p className="text-lg mb-6">
           Você acertou a palavra <span className="font-bold">{targetWord}</span>{" "}
-          em {attempts} tentativa{attempts > 1 ? "s" : ""}!
+          em <span className="font-bold">{attempts.length}</span> tentativas!
         </p>
-        <div className="flex justify-center">
-          <button
-            onClick={onPlayAgain}
-            className="px-6 py-3 bg-button-background text-white rounded-lg font-bold hover:bg-button-hover transition-colors"
-          >
-            Jogar Novamente
-          </button>
-        </div>
+
+        <button
+          onClick={handlePlayAgain}
+          className="px-6 py-3 bg-button-background hover:bg-button-hover text-white font-bold rounded-lg w-full transition-colors"
+        >
+          Jogar Novamente
+        </button>
       </div>
     </div>
   );

@@ -11,14 +11,15 @@ export default function Home() {
             src="/logo2.png"
             alt="Pixletters Logo"
             width={450}
-            height={150}
+            height={0}
+            style={{ height: "auto" }}
             priority
             className="mb-36"
           />
 
           <div className="flex flex-col gap-6 items-center">
             <Link href="/game">
-              <button className="w-48 px-6 py-3 bg-button-background hover:bg-button-hover text-button-text font-bold rounded-lg transition-colors shadow-lg">
+              <button className="w-48 px-6 py-3 bg-button-background hover:bg-button-hover text-white font-bold rounded-lg transition-colors shadow-lg">
                 Jogar
               </button>
             </Link>

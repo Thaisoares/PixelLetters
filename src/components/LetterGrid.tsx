@@ -1,19 +1,14 @@
 "use client";
 
 import { Pixel } from "@/types/game";
-import { Dispatch, SetStateAction } from "react";
+import { useGame } from "@/context/GameContext";
 
 interface LetterGridProps {
   pixels: Pixel[];
   isCorrectLetter?: boolean;
   isEmpty?: boolean;
   isCurrentPosition?: boolean;
-  setPosition?: SetPosition;
-}
-
-interface SetPosition {
-  position: number;
-  setCurrentPosition: Dispatch<SetStateAction<number>>;
+  position?: number;
 }
 
 export const LetterGrid = ({
@@ -21,31 +16,35 @@ export const LetterGrid = ({
   isCorrectLetter = false,
   isEmpty = false,
   isCurrentPosition = false,
-  setPosition,
+  position,
 }: LetterGridProps) => {
+  const { setCurrentPosition } = useGame();
+
+  const handleClick = () => {
+    if (position) {
+      setCurrentPosition(position);
+    }
+  };
+
   return (
     <div
-      onClick={() => {
-        if (setPosition) {
-          var { position, setCurrentPosition } = setPosition;
-          setCurrentPosition(position);
-        }
-      }}
+      onClick={handleClick}
       className={`
         w-letter-sm h-letter-sm
         md:w-letter-md md:h-letter-md 
         p-1.5 
-          ${
-            isEmpty
-              ? isCurrentPosition
-                ? "border-lightBlue border-2 bg-darkBackground/5" // Highlight current position
-                : "border-button-hover border-[1px]"
-              : isCurrentPosition
-              ? "bg-darkBackground  md:p-2 border-2 border-lightBlue"
-              : "bg-darkBackground md:p-2 border-2 border-darkBackground"
-          }
+        ${
+          isEmpty
+            ? isCurrentPosition
+              ? "border-cyan-400 border-2 bg-darkBackground/5"
+              : "border-button-hover border-[1px]"
+            : isCurrentPosition
+            ? "bg-darkBackground  md:p-2 border-2 border-darkBackground"
+            : "bg-darkBackground md:p-2 border-2 border-darkBackground"
+        }
         flex items-center justify-center rounded-[0.2rem]
-        ${setPosition ? "cursor-pointer" : ""}
+        ${position ? "cursor-pointer" : ""}
+        transition-all duration-150
       `}
     >
       {!isEmpty && (

@@ -1,31 +1,24 @@
+// src/components/GameGrid.tsx
 "use client";
 
-import { letterToPixels } from "@/lib/letterMapping";
+import { useGame } from "@/context/GameContext";
 import { LetterGrid } from "./LetterGrid";
-import { Pixel } from "@/types/game";
-import { Dispatch, SetStateAction } from "react";
+import { letterToPixels } from "@/lib/letterMapping";
 
-interface GameGridProps {
-  attempts: string[];
-  currentAttempt: string;
-  maxAttempts: number;
-  gameOver: boolean;
-  targetWord: string;
-  evaluatedWords?: Pixel[][][];
-  currentPosition: number;
-  setCurrentPosition: Dispatch<SetStateAction<number>>;
-}
-
-export const GameGrid = ({
-  attempts,
-  currentAttempt,
-  maxAttempts,
-  gameOver,
-  targetWord,
-  evaluatedWords,
-  currentPosition,
-  setCurrentPosition,
-}: GameGridProps) => {
+export const GameGrid = () => {
+  const {
+    gameState: {
+      attempts,
+      currentAttempt,
+      maxAttempts,
+      gameOver,
+      targetWord,
+      evaluatedWords,
+    },
+    currentPosition,
+    setCurrentPosition,
+  } = useGame();
+  console.log({ attempts, currentAttempt, currentPosition });
   return (
     <div className="grid gap-4 mb-8">
       {/* Previous attempts */}
@@ -48,34 +41,15 @@ export const GameGrid = ({
       {/* Current attempt */}
       {!gameOver && (
         <div className="flex gap-2 justify-center">
-          {currentAttempt.split("").map((letter, index) => {
-            if (letter == ".") {
-              return (
-                <LetterGrid
-                  key={`empty-current-${index}`}
-                  pixels={[]}
-                  isEmpty={true}
-                  isCurrentPosition={index + 1 == currentPosition}
-                  setPosition={{
-                    position: index + 1,
-                    setCurrentPosition: setCurrentPosition,
-                  }}
-                />
-              );
-            } else {
-              return (
-                <LetterGrid
-                  key={index}
-                  pixels={letterToPixels(letter)}
-                  isCurrentPosition={index + 1 == currentPosition}
-                  setPosition={{
-                    position: index + 1,
-                    setCurrentPosition: setCurrentPosition,
-                  }}
-                />
-              );
-            }
-          })}
+          {currentAttempt.split("").map((letter, index) => (
+            <LetterGrid
+              key={index}
+              pixels={letter !== "." ? letterToPixels(letter) : []}
+              isEmpty={letter === "."}
+              isCurrentPosition={currentPosition - 1 === index}
+              position={index + 1}
+            />
+          ))}
         </div>
       )}
 
@@ -87,7 +61,7 @@ export const GameGrid = ({
             key={`empty-row-${rowIndex}`}
             className="flex gap-2 justify-center"
           >
-            {Array(5)
+            {Array(currentAttempt.length)
               .fill(null)
               .map((_, colIndex) => (
                 <LetterGrid
